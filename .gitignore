@@ -1,0 +1,15 @@
+venv/
+__pycache__/
+*.pyc
+
+# Trained model
+*.safetensors
+
+# Tokenized datasets
+dataset/*_encoded.csv
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment files
+.env
