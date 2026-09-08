@@ -2,9 +2,9 @@ import pandas as pd
 import json
 
 # Load datasets
-train_df = pd.read_csv("dataset/train.csv")
-val_df = pd.read_csv("dataset/validation.csv")
-test_df = pd.read_csv("dataset/test.csv")
+train_df = pd.read_csv("../dataset/train.csv")
+val_df = pd.read_csv("../dataset/validation.csv")
+test_df = pd.read_csv("../dataset/test.csv")
 
 # Get all unique labels
 labels = sorted(train_df["label"].unique())

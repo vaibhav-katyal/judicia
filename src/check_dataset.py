@@ -1,6 +1,6 @@
 import pandas as pd
 
-df = pd.read_excel("dataset/legal_domain_dataset.xlsx")
+df = pd.read_excel("../dataset/legal_domain_dataset.xlsx")
 
 print("Total rows:", len(df))
 
