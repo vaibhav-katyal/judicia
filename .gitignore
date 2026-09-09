@@ -1,0 +1,97 @@
+# ==========================================
+# 1. Virtual Environments (Python)
+# ==========================================
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ==========================================
+# 2. Node & Frontend Build Artifacts
+# ==========================================
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/build/
+.pnpm-store/
+
+# ==========================================
+# 3. Heavy ML Model Weights (>100MB GitHub limit)
+# Note: config.json and tokenizer.json WILL be tracked,
+# but model weight files (.safetensors, .bin, .pt) are ignored.
+# ==========================================
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.h5
+*.onnx
+*.ckpt
+*.tflite
+models/*/*.safetensors
+models/*/*.bin
+
+# ==========================================
+# 4. Python Bytecode, Caches & Logs
+# ==========================================
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+downloads/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+*.log
+
+# ==========================================
+# 5. ML Training Checkpoints & Notebook Logs
+# ==========================================
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+checkpoint-*/
+runs/
+wandb/
+mlruns/
+tensorboard/
+
+# ==========================================
+# 6. Generated / Encoded Dataset Files
+# ==========================================
+dataset/*_encoded.csv
+
+# ==========================================
+# 7. Environment Variables & Secret Keys
+# ==========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+secrets.json
+
+# ==========================================
+# 8. Operating System & IDE Files
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,28 +1,60 @@
-import { useRef, useState, type FormEvent } from "react";
-import { searchCorpus, SUGGESTED_QUERIES, type LegalResult } from "@/lib/judicia-data";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  fetchModelPrediction,
+  SUGGESTED_QUERIES,
+  type LegalResult,
+  type ModelResponse,
+} from "@/lib/judicia-data";
 
-type Phase = "idle" | "loading" | "results" | "empty";
+type Phase = "idle" | "loading" | "results" | "empty" | "error";
 
 function App() {
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
-  const [results, setResults] = useState<LegalResult[]>([]);
+  const [modelResponse, setModelResponse] = useState<ModelResponse | null>(null);
+  const [isBackendHealthy, setIsBackendHealthy] = useState<boolean | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function run(raw: string) {
+  useEffect(() => {
+    checkHealth();
+  }, []);
+
+  async function checkHealth() {
+    try {
+      const res = await fetch("/api/health");
+      if (res.ok) {
+        setIsBackendHealthy(true);
+      } else {
+        setIsBackendHealthy(false);
+      }
+    } catch {
+      setIsBackendHealthy(false);
+    }
+  }
+
+  async function run(raw: string) {
     const q = raw.trim();
     if (!q) return;
     setQuery(q);
     setSubmitted(q);
     setPhase("loading");
-    setResults([]);
+    setModelResponse(null);
+
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      const found = searchCorpus(q);
-      setResults(found);
-      setPhase(found.length ? "results" : "empty");
-    }, 900);
+
+    try {
+      const data = await fetchModelPrediction(q);
+      setModelResponse(data);
+      if (data.results && data.results.length > 0) {
+        setPhase("results");
+      } else {
+        setPhase("empty");
+      }
+    } catch (err) {
+      console.error(err);
+      setPhase("error");
+    }
   }
 
   function onSubmit(e: FormEvent) {
@@ -34,18 +66,24 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header isHealthy={isBackendHealthy} onRecheckHealth={checkHealth} />
 
       <main className="mx-auto w-full max-w-5xl px-5 pb-24 sm:px-8">
         <section
           className={`rule-grid -mx-5 px-5 sm:-mx-8 sm:px-8 transition-all duration-500 ${
-            compact ? "pt-10 pb-8 sm:pt-14" : "pt-16 pb-14 sm:pt-28 sm:pb-20"
+            compact ? "pt-8 pb-6 sm:pt-10" : "pt-16 pb-14 sm:pt-24 sm:pb-20"
           }`}
         >
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-              Retrieval-grounded legal research
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground shadow-sm">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  isBackendHealthy ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
+                }`}
+              />
+              {isBackendHealthy
+                ? "BERT Domain Classification Model Connected"
+                : "Judicia Legal Domain Model"}
             </span>
 
             <h1
@@ -53,33 +91,31 @@ function App() {
                 compact ? "text-4xl sm:text-5xl" : "text-6xl sm:text-7xl"
               }`}
             >
-              Judicia
+              Judicia AI
             </h1>
 
             {!compact && (
               <p className="mx-auto mt-5 max-w-xl text-balance-tight text-base leading-relaxed text-muted-foreground sm:text-lg">
-                Ask in plain language. Judicia reads the statute book and reported
-                judgments, then returns the passages that actually govern your
-                question — each with its citation and why it matched.
+                Enter your legal query below. Your query will be evaluated live by our custom fine-tuned BERT model (<code>judicia-domain-model</code>) to predict legal domain classification and retrieve relevant statutory provisions & precedents.
               </p>
             )}
 
-            <form onSubmit={onSubmit} className="mt-9">
-              <div className="surface-plate group flex flex-col gap-3 rounded-2xl p-3 focus-within:border-accent sm:flex-row sm:items-center sm:rounded-full sm:p-2 sm:pl-5">
+            <form onSubmit={onSubmit} className="mt-8">
+              <div className="surface-plate group flex flex-col gap-3 rounded-2xl p-3 focus-within:border-accent sm:flex-row sm:items-center sm:rounded-full sm:p-2 sm:pl-5 shadow-lg">
                 <SearchGlyph />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="e.g. When is an electronic record admissible in evidence?"
+                  placeholder="e.g. Someone hacked my account or My employer terminated me without salary"
                   aria-label="Search legal question"
                   className="min-w-0 flex-1 bg-transparent px-2 py-3 text-[15px] text-foreground outline-none placeholder:text-muted-foreground sm:px-0"
                 />
                 <button
                   type="submit"
                   disabled={!query.trim() || phase === "loading"}
-                  className="ink-panel inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 text-sm font-semibold tracking-wide transition-all duration-200 hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-45 sm:rounded-full"
+                  className="ink-panel inline-flex h-12 items-center justify-center gap-2 rounded-xl px-7 text-sm font-semibold tracking-wide transition-all duration-200 hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-45 sm:rounded-full cursor-pointer"
                 >
-                  {phase === "loading" ? "Searching" : "Search"}
+                  {phase === "loading" ? "Analyzing with Model..." : "Ask Model"}
                 </button>
               </div>
             </form>
@@ -89,7 +125,7 @@ function App() {
                 <button
                   key={s}
                   onClick={() => run(s)}
-                  className="rounded-full border border-border bg-card/70 px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-ink"
+                  className="rounded-full border border-border bg-card/80 px-3.5 py-1.5 text-xs text-muted-foreground transition-all hover:border-accent hover:text-ink cursor-pointer"
                 >
                   {s}
                 </button>
@@ -98,11 +134,13 @@ function App() {
           </div>
         </section>
 
-        <section className="mt-10">
+        <section className="mt-8">
           {phase === "idle" && <IdleState />}
           {phase === "loading" && <LoadingState />}
           {phase === "empty" && <NoResults query={submitted} onReset={() => setPhase("idle")} />}
-          {phase === "results" && <Results query={submitted} results={results} />}
+          {phase === "results" && modelResponse && (
+            <Results query={submitted} modelResponse={modelResponse} />
+          )}
         </section>
       </main>
 
@@ -111,7 +149,13 @@ function App() {
   );
 }
 
-function Header() {
+function Header({
+  isHealthy,
+  onRecheckHealth,
+}: {
+  isHealthy: boolean | null;
+  onRecheckHealth: () => void;
+}) {
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/85 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-4 sm:px-8">
@@ -120,12 +164,32 @@ function Header() {
           <span className="font-display text-lg font-semibold tracking-tight text-ink">
             Judicia
           </span>
+          <span className="rounded bg-secondary/80 px-2 py-0.5 font-mono text-[10px] uppercase text-muted-foreground">
+            v1.0 ML
+          </span>
         </div>
-        <nav className="hidden items-center gap-7 text-sm text-muted-foreground sm:flex">
-          <span className="transition-colors hover:text-ink">Corpus</span>
-          <span className="transition-colors hover:text-ink">Citations</span>
-          <span className="transition-colors hover:text-ink">Method</span>
-        </nav>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onRecheckHealth}
+            title="Click to check backend status"
+            className="flex items-center gap-2 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-accent hover:text-ink cursor-pointer"
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${
+                isHealthy === true
+                  ? "bg-emerald-500"
+                  : isHealthy === false
+                  ? "bg-amber-500"
+                  : "bg-gray-400 animate-ping"
+              }`}
+            />
+            {isHealthy === true
+              ? "Model API: Connected"
+              : isHealthy === false
+              ? "Model API: Disconnected"
+              : "Checking API..."}
+          </button>
+        </div>
       </div>
     </header>
   );
@@ -134,7 +198,7 @@ function Header() {
 function Mark() {
   return (
     <span className="ink-panel flex h-8 w-8 items-center justify-center rounded-lg">
-      <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="h-4 w-4 text-accent" aria-hidden="true">
         <path
           d="M12 3v18M5 8h14M7 8l-3 6a3 3 0 0 0 6 0L7 8Zm10 0-3 6a3 3 0 0 0 6 0l-3-6Z"
           fill="none"
@@ -159,9 +223,9 @@ function SearchGlyph() {
 
 function IdleState() {
   const pillars = [
-    { k: "01", t: "Grounded in the source", d: "Every answer points back to a provision or reported judgment — never an unsourced summary." },
-    { k: "02", t: "Passage-level retrieval", d: "Judicia surfaces the operative paragraph, not the whole volume, so you read what matters." },
-    { k: "03", t: "Explained relevance", d: "Each result states why it matched, so you can accept or discard it in seconds." },
+    { k: "01", t: "BERT Domain Classifier", d: "Processes legal queries and predicts target legal domain (Cyber, Criminal, Property, Family, Labour, Civil, Consumer, Constitutional)." },
+    { k: "02", t: "Confidence & Multi-Class Scoring", d: "Calculates softmax probability distributions across all 8 legal domain categories to quantify model certainty." },
+    { k: "03", t: "Retrieved Legal Provisions", d: "Surfaces statutory provisions and precedents linked directly to the model's domain prediction." },
   ];
   return (
     <div className="grid gap-4 sm:grid-cols-3">
@@ -179,16 +243,21 @@ function IdleState() {
 function LoadingState() {
   return (
     <div className="space-y-4" role="status" aria-live="polite">
-      <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
-        Reading the corpus…
-      </p>
-      {[0, 1, 2].map((i) => (
+      <div className="flex items-center justify-between">
+        <p className="font-mono text-xs uppercase tracking-[0.18em] text-accent animate-pulse">
+          Evaluating Query with judicia-domain-model…
+        </p>
+      </div>
+      <div className="surface-plate rounded-2xl p-6 border border-accent/30">
+        <div className="skeleton-sheen h-4 w-48 rounded" />
+        <div className="skeleton-sheen mt-4 h-6 w-3/4 rounded" />
+        <div className="skeleton-sheen mt-3 h-3 w-full rounded" />
+      </div>
+      {[0, 1].map((i) => (
         <div key={i} className="surface-plate rounded-2xl p-6">
-          <div className="skeleton-sheen h-3 w-24" />
-          <div className="skeleton-sheen mt-4 h-5 w-2/3" />
-          <div className="skeleton-sheen mt-3 h-3 w-full" />
-          <div className="skeleton-sheen mt-2 h-3 w-5/6" />
-          <div className="skeleton-sheen mt-2 h-3 w-1/3" />
+          <div className="skeleton-sheen h-3 w-24 rounded" />
+          <div className="skeleton-sheen mt-4 h-5 w-2/3 rounded" />
+          <div className="skeleton-sheen mt-3 h-3 w-full rounded" />
         </div>
       ))}
     </div>
@@ -205,16 +274,15 @@ function NoResults({ query, onReset }: { query: string; onReset: () => void }) {
         </svg>
       </div>
       <h2 className="mt-5 font-display text-xl font-semibold text-ink">
-        Nothing in the corpus matches "{query}"
+        No matches for "{query}"
       </h2>
       <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-        Try naming the statute, the doctrine, or the situation in a full sentence —
-        Judicia matches on meaning, so more context usually helps.
+        Please try asking a complete legal question or describing your situation.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         <button
           onClick={onReset}
-          className="rounded-full border border-border px-4 py-2 text-sm text-ink transition-colors hover:border-accent"
+          className="rounded-full border border-border px-4 py-2 text-sm text-ink transition-colors hover:border-accent cursor-pointer"
         >
           Start over
         </button>
@@ -223,19 +291,113 @@ function NoResults({ query, onReset }: { query: string; onReset: () => void }) {
   );
 }
 
-function Results({ query, results }: { query: string; results: LegalResult[] }) {
+function Results({
+  query,
+  modelResponse,
+}: {
+  query: string;
+  modelResponse: ModelResponse;
+}) {
+  const { domain, confidence, probabilities, results, isModelLive } = modelResponse;
+  const confPct = Math.round(confidence * 100);
+
+  // Top probabilities array sorted descending
+  const sortedProbs = Object.entries(probabilities)
+    .map(([lbl, val]) => ({ label: lbl, score: val }))
+    .sort((a, b) => b.score - a.score);
+
   return (
-    <div>
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
-        <h2 className="font-display text-lg font-semibold text-ink">
-          {results.length} passages retrieved
-        </h2>
-        <p className="font-mono text-xs text-muted-foreground">
-          for "{query.length > 54 ? `${query.slice(0, 54)}…` : query}"
-        </p>
+    <div className="space-y-6">
+      {/* Model Inference Summary Banner */}
+      <div className="rounded-2xl border border-accent/40 bg-card p-6 shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <span className="font-mono text-xs uppercase tracking-[0.16em] text-accent">
+              ML Model Output Analysis
+            </span>
+            <h2 className="mt-1 font-display text-2xl font-bold text-ink">
+              Predicted Domain: <span className="text-accent underline underline-offset-4">{domain}</span>
+            </h2>
+            <p className="mt-1 font-mono text-xs text-muted-foreground">
+              Query: "{query}"
+            </p>
+          </div>
+          <div className="flex flex-col items-end">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-3xl font-extrabold text-ink">{confPct}%</span>
+              <span className="text-xs text-muted-foreground">Confidence</span>
+            </div>
+            <div className="mt-1 h-2 w-32 overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${confPct}%`,
+                  background: "linear-gradient(90deg, #d97706, #10b981)",
+                }}
+              />
+            </div>
+            <span className="mt-1 font-mono text-[10px] text-muted-foreground">
+              {isModelLive ? "Live Inference: judicia-domain-model" : "Fallback Offline Mode"}
+            </span>
+          </div>
+        </div>
+
+        {/* Probability breakdown */}
+        {sortedProbs.length > 1 && (
+          <div className="mt-6 border-t border-border pt-4">
+            <h4 className="font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground mb-3">
+              Model Class Distribution Breakdown:
+            </h4>
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              {sortedProbs.slice(0, 8).map((p) => {
+                const percentage = Math.round(p.score * 100);
+                const isTop = p.label === domain;
+                return (
+                  <div
+                    key={p.label}
+                    className={`rounded-xl border p-2.5 transition-all ${
+                      isTop
+                        ? "border-accent/80 bg-accent/10 shadow-sm"
+                        : "border-border bg-background/50"
+                    }`}
+                  >
+                    <div className="flex justify-between font-mono text-xs">
+                      <span className={isTop ? "font-bold text-ink" : "text-muted-foreground"}>
+                        {p.label}
+                      </span>
+                      <span className={isTop ? "font-bold text-accent" : "text-muted-foreground"}>
+                        {percentage}%
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${percentage}%`,
+                          backgroundColor: isTop ? "var(--accent, #d97706)" : "#6b7280",
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="mt-5 space-y-4">
+      {/* Retrieved Passages Header */}
+      <div className="flex items-baseline justify-between border-b border-border pb-3">
+        <h3 className="font-display text-lg font-semibold text-ink">
+          {results.length} Relevant Statutory Provisions & Precedents
+        </h3>
+        <span className="font-mono text-xs text-muted-foreground">
+          Matched under {domain}
+        </span>
+      </div>
+
+      {/* Results Cards */}
+      <div className="space-y-4">
         {results.map((r, i) => (
           <ResultCard key={r.id} result={r} index={i} />
         ))}
@@ -252,7 +414,7 @@ function ResultCard({ result, index }: { result: LegalResult; index: number }) {
       style={{ animationDelay: `${index * 70}ms` }}
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-        <span className="rounded-md bg-secondary px-2 py-1 text-ink-soft">{result.category}</span>
+        <span className="rounded-md bg-secondary px-2.5 py-1 font-semibold text-ink-soft">{result.category}</span>
         <span>{result.jurisdiction}</span>
         <span aria-hidden="true">·</span>
         <span>{result.year}</span>
@@ -260,25 +422,25 @@ function ResultCard({ result, index }: { result: LegalResult; index: number }) {
           <span className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
             <span
               className="block h-full rounded-full"
-              style={{ width: `${pct}%`, background: "var(--gradient-brass)" }}
+              style={{ width: `${pct}%`, background: "var(--gradient-brass, linear-gradient(90deg, #d97706, #10b981))" }}
             />
           </span>
-          {pct}% match
+          {pct}% relevance
         </span>
       </div>
 
       <h3 className="mt-4 font-display text-xl font-semibold leading-snug text-ink">
         {result.title}
       </h3>
-      <p className="mt-1 text-sm text-muted-foreground">{result.citation}</p>
+      <p className="mt-1 text-sm text-muted-foreground font-mono">{result.citation}</p>
 
-      <blockquote className="mt-4 border-l-2 border-accent/60 pl-4 text-[15px] leading-relaxed text-ink-soft">
+      <blockquote className="mt-4 border-l-2 border-accent pl-4 text-[15px] leading-relaxed text-ink-soft bg-card/30 py-1.5 rounded-r">
         {result.snippet}
       </blockquote>
 
       <div className="mt-4 flex flex-wrap gap-1.5">
         {result.passages.map((p) => (
-          <span key={p} className="rounded-full bg-secondary px-2.5 py-1 text-xs text-ink-soft">
+          <span key={p} className="rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs text-ink-soft font-mono">
             {p}
           </span>
         ))}
@@ -286,12 +448,9 @@ function ResultCard({ result, index }: { result: LegalResult; index: number }) {
 
       <div className="mt-5 flex flex-wrap items-end justify-between gap-4 border-t border-border pt-4">
         <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-          <span className="font-semibold text-ink">Why this matched — </span>
+          <span className="font-semibold text-ink">Model Attribution — </span>
           {result.why}
         </p>
-        <button className="shrink-0 text-sm font-semibold text-ink underline-offset-4 transition-colors hover:text-accent hover:underline">
-          Open document →
-        </button>
       </div>
     </article>
   );
@@ -299,10 +458,10 @@ function ResultCard({ result, index }: { result: LegalResult; index: number }) {
 
 function Footer() {
   return (
-    <footer className="border-t border-border">
+    <footer className="border-t border-border mt-16">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-5 py-8 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <p>Judicia · Retrieval-grounded legal research</p>
-        <p>Results are research aids, not legal advice.</p>
+        <p>Judicia AI · Powered by judicia-domain-model (BERT)</p>
+        <p>Legal domain classification and statutory passage retrieval.</p>
       </div>
     </footer>
   );

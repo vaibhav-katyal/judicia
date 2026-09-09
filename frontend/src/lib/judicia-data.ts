@@ -11,11 +11,20 @@ export type LegalResult = {
   match: number;
 };
 
+export type ModelResponse = {
+  query: string;
+  domain: string;
+  confidence: number;
+  probabilities: Record<string, number>;
+  results: LegalResult[];
+  isModelLive?: boolean;
+};
+
 export const SUGGESTED_QUERIES = [
-  "What is the proportionality test for privacy restrictions?",
-  "Damages available for breach of a commercial contract",
-  "Are WhatsApp messages admissible as evidence?",
-  "Notice requirements before terminating an employee",
+  "Someone hacked my Instagram account and changed my password",
+  "My employer terminated me without proper notice or salary",
+  "My landlord refuses to return my rental security deposit",
+  "The police threatened me and restricted my right to peaceful protest",
 ];
 
 const CORPUS: LegalResult[] = [
@@ -60,13 +69,52 @@ const CORPUS: LegalResult[] = [
   },
 ];
 
-export function searchCorpus(query: string): LegalResult[] {
+export async function fetchModelPrediction(query: string): Promise<ModelResponse> {
+  const cleanQuery = query.trim();
+  try {
+    const response = await fetch("/api/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query: cleanQuery }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        query: data.query,
+        domain: data.domain,
+        confidence: data.confidence,
+        probabilities: data.probabilities || {},
+        results: data.results || [],
+        isModelLive: true,
+      };
+    }
+  } catch (err) {
+    console.warn("Model backend API unreachable, falling back to local search", err);
+  }
+
+  // Fallback if backend is unavailable
+  const fallbackResults = searchCorpusFallback(cleanQuery);
+  return {
+    query: cleanQuery,
+    domain: "General Legal Domain",
+    confidence: 0.85,
+    probabilities: { "General Legal": 0.85 },
+    results: fallbackResults,
+    isModelLive: false,
+  };
+}
+
+export function searchCorpusFallback(query: string): LegalResult[] {
   const q = query.toLowerCase();
-  return CORPUS.filter(
+  const matched = CORPUS.filter(
     (r) =>
       r.title.toLowerCase().includes(q) ||
       r.snippet.toLowerCase().includes(q) ||
       r.category.toLowerCase().includes(q) ||
       q.split(" ").some((word) => word.length > 3 && r.snippet.toLowerCase().includes(word))
-  ).sort((a, b) => b.match - a.match);
+  );
+  return matched.length ? matched : CORPUS;
 }
