@@ -5,11 +5,11 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 2000,
-    "title": "Section 66C, Information Technology Act, 2000 — Identity Theft",
+    "title": "Section 66C, Information Technology Act, 2000 — Identity Theft & Account Hacking",
     "citation": "IT Act 2000, s.66C",
-    "snippet": "Whoever fraudulently or dishonestly make use of the electronic signature, password or any other unique identification feature of any other person, shall be punished with imprisonment.",
-    "passages": ["s.66C - Punishment for Identity Theft", "Electronic Signature & Password Misuse"],
-    "keywords": "hacked instagram facebook account password otp identity theft credential compromised social media"
+    "snippet": "It is a crime to fraudulently use someone else's password, OTP, digital signature, or personal login details. Protects users when Instagram, WhatsApp, email, or social media accounts are hacked.",
+    "passages": ["s.66C - Punishment for Identity Theft (Up to 3 Years Jail & Fine)", "Unauthorized Password & OTP Misuse"],
+    "keywords": "hacked instagram facebook account password otp identity theft credential compromised social media profile compromised login stolen"
   },
   {
     "id": "cy-102",
@@ -17,11 +17,11 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 2000,
-    "title": "Section 66D, Information Technology Act, 2000 — Cheating by Personation",
+    "title": "Section 66D, Information Technology Act, 2000 — Cheating by Personation & Online Scams",
     "citation": "IT Act 2000, s.66D",
-    "snippet": "Whoever by means of any communication device or computer resource cheats by personation, shall be punished with imprisonment up to three years.",
-    "passages": ["s.66D - Cheating by Personation", "Phishing & Fake Profiles"],
-    "keywords": "phishing fake profile impersonation online banking scam website spoofing whatsapp fraud call"
+    "snippet": "Covers financial scams, phishing links, and fake profiles created online to deceive people. Punishes anyone who cheats or tricks users online using computers or mobile phones.",
+    "passages": ["s.66D - Cheating by Personation using Computer Resources", "Phishing, Fake Customer Care & Financial Fraud"],
+    "keywords": "phishing fake profile impersonation online banking scam website spoofing whatsapp fraud call telegram lottery scam otp fraud money stolen"
   },
   {
     "id": "cy-103",
@@ -29,59 +29,71 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 2000,
-    "title": "Section 66E, Information Technology Act, 2000 — Privacy Violation",
-    "citation": "IT Act 2000, s.66E",
-    "snippet": "Whoever intentionally or knowingly captures, publishes or transmits the image of a private area of any person without consent violates privacy.",
-    "passages": ["s.66E - Violation of Privacy", "Private Images & Videos"],
-    "keywords": "privacy leaked photos private videos recorded without consent photos blackmail camera morphed"
+    "title": "Section 66E & 67, IT Act — Online Privacy Violation & Cyber Harassment",
+    "citation": "IT Act 2000, s.66E / s.67",
+    "snippet": "Protects against recording, sharing, or publishing private images, videos, or intimate content without consent. Also covers cyber-stalking, blackmailing, and morphed media.",
+    "passages": ["s.66E - Violation of Personal Privacy", "s.67 - Transmitting Obscene Content Online"],
+    "keywords": "privacy leaked photos private videos recorded without consent photos blackmail camera morphed deepfake harassment stalking"
   },
   {
     "id": "cy-104",
     "domain": "Cyber",
     "category": "Statute",
     "jurisdiction": "India",
-    "year": 2000,
-    "title": "Section 65B, Indian Evidence Act, 1872 — Electronic Records Admissibility",
-    "citation": "Indian Evidence Act, 1872, s.65B",
-    "snippet": "Any information contained in an electronic record is deemed a document and admissible in evidence subject to conditions and certificate under Section 65B(4).",
-    "passages": ["65B(1) - Electronic Document", "65B(4) - Admissibility Certificate"],
-    "keywords": "electronic record digital evidence chat logs email screenshot server log certificate"
+    "year": 2023,
+    "title": "Section 63, Bharatiya Sakshya Adhiniyam, 2023 (formerly Section 65B Evidence Act) — Admissibility of Digital Evidence",
+    "citation": "BSA 2023, s.63 / Indian Evidence Act, s.65B",
+    "snippet": "Explains how electronic evidence (WhatsApp chats, emails, social media messages, server logs, phone recordings) can be legally admitted in court as valid evidence with a certificate.",
+    "passages": ["BSA s.63(1) - Admissibility of Electronic Records", "BSA s.63(4) - Mandatory Certificate for Electronic Evidence"],
+    "keywords": "electronic record digital evidence chat logs email screenshot server log certificate whatsapp message proof"
   },
   {
     "id": "cr-201",
     "domain": "Criminal",
     "category": "Statute",
     "jurisdiction": "India",
-    "year": 1860,
-    "title": "Section 503 & 506, Indian Penal Code — Criminal Intimidation",
-    "citation": "IPC 1860, s.503/506",
-    "snippet": "Whoever threatens another with any injury to his person, reputation or property with intent to cause alarm, commits criminal intimidation.",
-    "passages": ["s.503 - Intimidation Defined", "s.506 - Punishment up to 7 years"],
-    "keywords": "threat death threat threatened kill harm intimidation verbal abuse violent warning doorstep"
+    "year": 2023,
+    "title": "Section 351, Bharatiya Nyaya Sanhita (BNS), 2023 (formerly Section 503/506 IPC) — Criminal Intimidation & Threats",
+    "citation": "BNS 2023, s.351 / IPC 1860, s.503 & s.506",
+    "snippet": "Punishes anyone who threatens to harm, kill, or damage the reputation of another person or their family. Applies to verbal threats, written notes, and intimidating behavior.",
+    "passages": ["BNS s.351(1) - Criminal Intimidation Defined", "BNS s.351(2) - Punishment up to 7 Years for Threat to Kill"],
+    "keywords": "threat death threat threatened kill harm intimidation verbal abuse violent warning doorstep blackmail threat"
   },
   {
     "id": "cr-202",
     "domain": "Criminal",
     "category": "Statute",
     "jurisdiction": "India",
-    "year": 1860,
-    "title": "Section 323 & 351, Indian Penal Code — Assault & Causing Hurt",
-    "citation": "IPC 1860, s.323/351",
-    "snippet": "Punishment for voluntarily causing hurt to any person and assault by making gestures or preparations to use unlawful force.",
-    "passages": ["s.323 - Voluntarily Causing Hurt", "s.351 - Assault"],
-    "keywords": "slapped attacked physical violence hit beaten assault wooden plank rod injury"
+    "year": 2023,
+    "title": "Section 115 & 131, Bharatiya Nyaya Sanhita (BNS), 2023 (formerly Section 323/351 IPC) — Assault & Physical Hurt",
+    "citation": "BNS 2023, s.115 & s.131 / IPC 1860, s.323 & s.351",
+    "snippet": "Covers physical attacks, slapping, beating, or using weapons to cause physical injury or bodily harm during fights and disagreements.",
+    "passages": ["BNS s.115 - Voluntarily Causing Hurt", "BNS s.131 - Assault & Criminal Force"],
+    "keywords": "slapped attacked physical violence hit beaten assault wooden plank rod injury hospital fight violence"
   },
   {
     "id": "cr-203",
     "domain": "Criminal",
     "category": "Statute",
     "jurisdiction": "India",
-    "year": 1860,
-    "title": "Section 378 & 379, Indian Penal Code — Theft & Stolen Property",
-    "citation": "IPC 1860, s.378/379",
-    "snippet": "Whoever intending to take dishonestly any movable property out of the possession of any person without consent commits theft.",
-    "passages": ["s.378 - Theft Defined", "s.411 - Receiving Stolen Property"],
-    "keywords": "stolen stole vehicle phone bike shop robbery break in lock broken theft"
+    "year": 2023,
+    "title": "Section 303 & 305, Bharatiya Nyaya Sanhita (BNS), 2023 (formerly Section 378/379 IPC) — Theft, Burglary & House Trespass",
+    "citation": "BNS 2023, s.303 & s.305 / IPC 1860, s.378 & s.379",
+    "snippet": "Governs cases where someone dishonestly takes movable property (vehicles, money, electronics) or breaks into a house to commit theft.",
+    "passages": ["BNS s.303 - Theft Defined", "BNS s.305 - Theft in Dwelling House / Building"],
+    "keywords": "stolen stole vehicle phone bike shop robbery break in lock broken theft stolen property burglary"
+  },
+  {
+    "id": "cr-204",
+    "domain": "Criminal",
+    "category": "Statute",
+    "jurisdiction": "India",
+    "year": 2023,
+    "title": "Section 318, Bharatiya Nyaya Sanhita (BNS), 2023 (formerly Section 420 IPC) — Cheating & Financial Fraud",
+    "citation": "BNS 2023, s.318 / IPC 1860, s.420",
+    "snippet": "Deals with cheating, financial fraud, fake investment schemes, forging documents to steal money, and dishonest inducement.",
+    "passages": ["BNS s.318(4) - Cheating & Dishonestly Inducing Delivery of Property"],
+    "keywords": "cheating fraud 420 scam fake scheme stolen money money taken bogus agent forgery impersonation"
   },
   {
     "id": "pr-301",
@@ -89,11 +101,11 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 1882,
-    "title": "Section 105 & 108, Transfer of Property Act — Tenancy & Security Deposit",
-    "citation": "Transfer of Property Act 1882, s.105/108",
-    "snippet": "Lease of immovable property, determination of lease, tenant rights, lessor duties, and recovery of tenancy security deposit.",
-    "passages": ["s.105 - Lease Defined", "s.108 - Rights & Liabilities of Lessor"],
-    "keywords": "landlord tenant rent deposit security deposit vacate rent unpaid lease eviction house"
+    "title": "Section 105 & 108, Transfer of Property Act, 1882 — Rental Agreements & Security Deposits",
+    "citation": "Transfer of Property Act 1882, s.105 & s.108",
+    "snippet": "Governs landlord and tenant rights. Clarifies rules on rental security deposit refunds, non-payment of rent, lease termination notice, and quiet enjoyment of property.",
+    "passages": ["s.105 - Lease & Rent Defined", "s.108 - Obligations of Landlord & Tenant (Return of Deposit)"],
+    "keywords": "landlord tenant rent deposit security deposit vacate rent unpaid lease eviction house apartment flat flatmate"
   },
   {
     "id": "pr-302",
@@ -101,11 +113,11 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 1963,
-    "title": "Section 5 & 6, Specific Relief Act, 1963 — Recovery of Possession & Encroachment",
-    "citation": "Specific Relief Act 1963, s.5/6",
-    "snippet": "Person dispossessed of immovable property without consent may recover possession by suit irrespective of title.",
-    "passages": ["s.5 - Title Possession", "s.6 - Dispossession Suit"],
-    "keywords": "ancestral land plot house possession encroachment boundary wall illegal occupation squatter title deed co-owner partition"
+    "title": "Section 5 & 6, Specific Relief Act, 1963 — Land Encroachment & Illegal Dispossession",
+    "citation": "Specific Relief Act 1963, s.5 & s.6",
+    "snippet": "Allows property owners or lawful occupants to quickly reclaim possession of land or housing if someone illegally occupies it, builds unauthorized walls, or encroaches on boundaries.",
+    "passages": ["s.5 - Title-Based Property Recovery", "s.6 - Suit by Person Illegally Dispossessed of Land"],
+    "keywords": "ancestral land plot house possession encroachment boundary wall illegal occupation squatter title deed co-owner partition land grab"
   },
   {
     "id": "fa-401",
@@ -113,11 +125,11 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 1955,
-    "title": "Section 13 & 24, Hindu Marriage Act, 1955 — Divorce & Maintenance",
-    "citation": "Hindu Marriage Act 1955, s.13/24",
-    "snippet": "Grounds for dissolution of marriage by decree of divorce, spousal maintenance pendente lite, and litigation expenses.",
-    "passages": ["s.13 - Divorce Grounds", "s.24 - Spousal Maintenance"],
-    "keywords": "divorce wife husband cruelty maintenance separated matrimonial home marriage contested"
+    "title": "Section 13 & 24, Hindu Marriage Act, 1955 — Divorce & Spousal Maintenance",
+    "citation": "Hindu Marriage Act 1955, s.13 & s.24",
+    "snippet": "Sets legal grounds for seeking a divorce (cruelty, desertion, adultery) and grants spousal maintenance during and after court proceedings.",
+    "passages": ["s.13 - Legal Grounds for Divorce", "s.24 - Interim Spousal Maintenance & Legal Expenses"],
+    "keywords": "divorce wife husband cruelty maintenance separated matrimonial home marriage contested alimony spousal support"
   },
   {
     "id": "fa-402",
@@ -125,11 +137,23 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 1956,
-    "title": "Section 6 & 13, Hindu Minority & Guardianship Act — Child Custody",
-    "citation": "HMG Act 1956, s.6/13",
-    "snippet": "Natural guardians of minor children and paramount consideration of minor's welfare in custody and visitation rights.",
-    "passages": ["s.6 - Natural Guardian", "s.13 - Welfare of Minor Paramount"],
-    "keywords": "custody child minor visitation father mother ex-wife daughter son adoption guardian"
+    "title": "Section 6 & 13, Hindu Minority & Guardianship Act — Child Custody & Visitation Rights",
+    "citation": "HMG Act 1956, s.6 & s.13",
+    "snippet": "Mandates that the child's emotional and physical welfare is the single most important factor when courts award custody or visitation rights to parents.",
+    "passages": ["s.6 - Natural Guardians of Minor", "s.13 - Welfare of Minor Child to Be Paramount Consideration"],
+    "keywords": "custody child minor visitation father mother ex-wife daughter son adoption guardian relocation"
+  },
+  {
+    "id": "fa-403",
+    "domain": "Family",
+    "category": "Statute",
+    "jurisdiction": "India",
+    "year": 2005,
+    "title": "Protection of Women from Domestic Violence Act, 2005 (PWDVA)",
+    "citation": "PWDVA 2005, s.12 / s.18",
+    "snippet": "Provides immediate protection orders, right to reside in shared household, monetary relief, and custody orders for women facing physical, verbal, or economic abuse.",
+    "passages": ["s.18 - Protection Orders Against Abuse", "s.19 - Right to Reside in Shared Household"],
+    "keywords": "domestic violence abuse harassment in laws dowry pressure shared household physical abuse economic abuse"
   },
   {
     "id": "la-501",
@@ -137,11 +161,11 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 1947,
-    "title": "Section 25F, Industrial Disputes Act & Payment of Wages Act — Termination & Unpaid Salary",
+    "title": "Section 25F, Industrial Disputes Act & Payment of Wages Act — Unfair Termination & Unpaid Salary",
     "citation": "ID Act 1947, s.25F / Payment of Wages Act s.15",
-    "snippet": "Notice requirements prior to termination, retrenchment compensation, and recovery of withheld or delayed monthly salary.",
-    "passages": ["s.25F - Notice & Compensation", "s.15 - Wages Recovery"],
-    "keywords": "employer terminated notice severance unpaid salary salary delayed company relieved experience letter notice period"
+    "snippet": "Protects employees from illegal termination without 30-day notice or severance pay. Punishes employers who delay or withhold monthly salary.",
+    "passages": ["s.25F - Mandatory 1-Month Notice or Salary in Lieu", "s.15 - Claims for Delayed or Withheld Salary"],
+    "keywords": "employer terminated notice severance unpaid salary salary delayed company relieved experience letter notice period layoff"
   },
   {
     "id": "la-502",
@@ -149,11 +173,11 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 1961,
-    "title": "Section 5 & 12, Maternity Benefit Act, 1961 — Statutory Leave & Protection",
-    "citation": "Maternity Benefit Act 1961, s.5/12",
-    "snippet": "Payment of statutory maternity benefits and absolute prohibition of dismissal or reduction of rating during leave.",
-    "passages": ["s.5 - Benefit Payment", "s.12 - Prohibition of Dismissal"],
-    "keywords": "maternity benefit maternity leave overtime working hours statutory benefit factory safety"
+    "title": "Section 5 & 12, Maternity Benefit Act, 1961 — Maternity Rights & Dismissal Protection",
+    "citation": "Maternity Benefit Act 1961, s.5 & s.12",
+    "snippet": "Guarantees 26 weeks of paid maternity leave for female employees and strictly forbids employers from firing workers or reducing performance ratings while on leave.",
+    "passages": ["s.5 - Paid Maternity Leave Entitlement", "s.12 - Illegal to Dismiss Female Employee During Maternity Leave"],
+    "keywords": "maternity benefit maternity leave overtime working hours statutory benefit factory safety rating reduced"
   },
   {
     "id": "ci-601",
@@ -161,11 +185,11 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 1872,
-    "title": "Section 73 & 74, Indian Evidence & Contract Act — Breach of Contract & Damages",
-    "citation": "Indian Contract Act 1872, s.73/74",
-    "snippet": "Compensation for loss or damage caused by breach of contract or non-fulfillment of written agreement terms.",
-    "passages": ["s.73 - Damages for Breach", "s.74 - Penalty Clause"],
-    "keywords": "contract breach agreement owed money supplier contractor service non payment damages agreement signed"
+    "title": "Section 73 & 74, Indian Contract Act, 1872 — Contract Breach & Damages Claim",
+    "citation": "Indian Contract Act 1872, s.73 & s.74",
+    "snippet": "Enforces written agreements and business contracts. Gives the injured party a legal right to claim monetary compensation for financial loss caused by a contract breach.",
+    "passages": ["s.73 - Compensation for Loss Caused by Contract Breach", "s.74 - Enforceability of Penalty & Liquidated Damages"],
+    "keywords": "contract breach agreement owed money supplier contractor service non payment damages agreement signed agreement default"
   },
   {
     "id": "co-701",
@@ -173,11 +197,11 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 2019,
-    "title": "Section 2(11) & 35, Consumer Protection Act, 2019 — Deficiency in Service & Product Defect",
+    "title": "Section 2(11) & 35, Consumer Protection Act, 2019 — Defective Products & Service Deficiency",
     "citation": "Consumer Protection Act 2019, s.35",
-    "snippet": "Complaint procedure before Consumer Commission for defective goods, deficiency in service, refund refusal, or unfair trade practice.",
-    "passages": ["s.2(11) - Deficiency in Service", "s.2(47) - Unfair Trade Practice"],
-    "keywords": "product defective warranty refund e-commerce delivered wrong item damaged store complaint online order repair"
+    "snippet": "Protects buyers against defective appliances, e-commerce fake products, warranty service refusal, wrong billing, or unfulfilled refunds.",
+    "passages": ["s.2(11) - Deficiency in Service Defined", "s.2(47) - Unfair Trade Practice & E-Commerce Defect"],
+    "keywords": "product defective warranty refund e-commerce delivered wrong item damaged store complaint online order repair replacement"
   },
   {
     "id": "cn-801",
@@ -185,10 +209,10 @@
     "category": "Statute",
     "jurisdiction": "India",
     "year": 1950,
-    "title": "Articles 14, 19 & 21, Constitution of India — Fundamental Rights Violation",
-    "citation": "Constitution of India, Art. 14/19/21",
-    "snippet": "Protection of fundamental rights: Equality before law, protection of freedom of speech and expression, and right to life & personal liberty.",
-    "passages": ["Art. 14 - Equality", "Art. 19 - Free Speech & Assembly", "Art. 21 - Right to Life"],
-    "keywords": "government authority protest fundamental rights equality speech state restriction discrimination policy arbitrary"
+    "title": "Articles 14, 19 & 21, Constitution of India — Fundamental Rights Protection",
+    "citation": "Constitution of India, Art. 14 / Art. 19 / Art. 21",
+    "snippet": "Guarantees equality before the law, freedom of speech and peaceful assembly, and protection of personal liberty and privacy against arbitrary government actions.",
+    "passages": ["Art. 14 - Right to Equality & Non-Discrimination", "Art. 19 - Freedom of Speech & Peaceful Protest", "Art. 21 - Right to Life & Personal Liberty"],
+    "keywords": "government authority protest fundamental rights equality speech state restriction discrimination policy arbitrary writ petition"
   }
 ]
