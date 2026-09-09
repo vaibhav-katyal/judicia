@@ -1,0 +1,172 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Judicia design system.
+ * Palette: deep ink green (authority), warm parchment (paper), brass (precision).
+ * Type: Fraunces (display serif) + Manrope (UI sans) + IBM Plex Mono (metadata).
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-parchment: var(--parchment);
+  --color-brass: var(--brass);
+  --color-brass-soft: var(--brass-soft);
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Manrope", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+:root {
+  --radius: 0.75rem;
+
+  --ink: oklch(0.24 0.035 168);
+  --ink-soft: oklch(0.34 0.03 168);
+  --parchment: oklch(0.975 0.008 92);
+  --brass: oklch(0.68 0.11 78);
+  --brass-soft: oklch(0.86 0.06 84);
+
+  --background: oklch(0.978 0.007 92);
+  --foreground: oklch(0.24 0.035 168);
+  --card: oklch(0.995 0.004 92);
+  --card-foreground: oklch(0.24 0.035 168);
+  --popover: oklch(0.995 0.004 92);
+  --popover-foreground: oklch(0.24 0.035 168);
+  --primary: oklch(0.28 0.045 168);
+  --primary-foreground: oklch(0.975 0.01 92);
+  --secondary: oklch(0.945 0.012 92);
+  --secondary-foreground: oklch(0.28 0.045 168);
+  --muted: oklch(0.945 0.012 92);
+  --muted-foreground: oklch(0.52 0.02 150);
+  --accent: oklch(0.68 0.11 78);
+  --accent-foreground: oklch(0.22 0.035 168);
+  --destructive: oklch(0.55 0.19 27);
+  --destructive-foreground: oklch(0.98 0.005 92);
+  --border: oklch(0.89 0.014 92);
+  --input: oklch(0.89 0.014 92);
+  --ring: oklch(0.68 0.11 78);
+
+  --gradient-ink: linear-gradient(160deg, oklch(0.28 0.045 168), oklch(0.19 0.03 172));
+  --gradient-brass: linear-gradient(100deg, var(--brass), oklch(0.78 0.09 88));
+  --shadow-plate: 0 1px 2px oklch(0.24 0.035 168 / 0.05), 0 18px 40px -24px oklch(0.24 0.035 168 / 0.28);
+  --shadow-lift: 0 2px 4px oklch(0.24 0.035 168 / 0.06), 0 28px 60px -28px oklch(0.24 0.035 168 / 0.35);
+  --transition-soft: 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--brass-soft);
+    color: var(--ink);
+  }
+}
+
+@utility surface-plate {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-plate);
+  transition: box-shadow var(--transition-soft), transform var(--transition-soft), border-color var(--transition-soft);
+}
+
+@utility surface-plate-interactive {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-plate);
+  transition: box-shadow var(--transition-soft), transform var(--transition-soft), border-color var(--transition-soft);
+  &:hover {
+    box-shadow: var(--shadow-lift);
+    transform: translateY(-2px);
+    border-color: color-mix(in oklab, var(--brass) 45%, var(--border));
+  }
+}
+
+@utility ink-panel {
+  background-image: var(--gradient-ink);
+  color: var(--primary-foreground);
+}
+
+@utility rule-grid {
+  background-image:
+    radial-gradient(circle at 50% 0%, color-mix(in oklab, var(--brass) 16%, transparent), transparent 62%),
+    linear-gradient(to right, color-mix(in oklab, var(--ink) 6%, transparent) 1px, transparent 1px);
+  background-size: 100% 100%, 88px 100%;
+}
+
+@utility text-balance-tight {
+  text-wrap: balance;
+}
+
+@keyframes judicia-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-rise {
+  animation: judicia-rise 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes judicia-sheen {
+  0% {
+    background-position: -160% 0;
+  }
+  100% {
+    background-position: 260% 0;
+  }
+}
+
+@utility skeleton-sheen {
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--ink) 6%, transparent) 0%,
+    color-mix(in oklab, var(--ink) 12%, transparent) 45%,
+    color-mix(in oklab, var(--ink) 6%, transparent) 90%
+  );
+  background-size: 220% 100%;
+  animation: judicia-sheen 1.5s linear infinite;
+  border-radius: 999px;
+}
