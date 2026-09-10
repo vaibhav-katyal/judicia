@@ -23,9 +23,12 @@ This script fine-tunes InLegalBERT (law-ai/InLegalBERT) for sequence classificat
 5. Exports best model weights & tokenizer to models/judicia-domain-model/
 """
 
-# Configuration Parameters
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
+
+PROCESSED_DIR = os.path.join(PROJECT_ROOT, "dataset", "processed")
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "models", "judicia-domain-model")
 MODEL_NAME = "law-ai/InLegalBERT"
-OUTPUT_DIR = "models/judicia-domain-model"
 
 def compute_metrics(eval_pred):
     predictions, labels = eval_pred
@@ -46,29 +49,28 @@ def compute_metrics(eval_pred):
     }
 
 def train_model():
-    print("=" * 70)
+    print("=" * 75)
     print("STAGE 4: TRANSFORMER MODEL FINE-TUNING (InLegalBERT)")
-    print("=" * 70)
+    print("=" * 75)
 
-    # 1. Locate encoded datasets & mapping
-    base_dir = "dataset/processed" if os.path.exists("dataset/processed/train_encoded.csv") else "dataset"
-    
-    train_file = os.path.join(base_dir, "train_encoded.csv")
-    val_file = os.path.join(base_dir, "validation_encoded.csv")
-    test_file = os.path.join(base_dir, "test_encoded.csv")
-    mapping_file = os.path.join(base_dir, "label_mapping.json")
+    train_file = os.path.join(PROCESSED_DIR, "train_encoded.csv")
+    val_file = os.path.join(PROCESSED_DIR, "validation_encoded.csv")
+    test_file = os.path.join(PROCESSED_DIR, "test_encoded.csv")
+    mapping_file = os.path.join(PROCESSED_DIR, "label_mapping.json")
+
+    if not os.path.exists(train_file):
+        raise FileNotFoundError(f"Encoded train file not found at {train_file}! Run step3_label_encoding.py first.")
 
     with open(mapping_file, "r", encoding="utf-8") as f:
         mapping = json.load(f)
-    
+
     label2id = mapping["label2id"]
     id2label = {int(k): v for k, v in mapping["id2label"].items()}
     num_labels = len(label2id)
 
-    print(f"Loaded {num_labels} classes from {mapping_file}")
-    print(f"Dataset path: {base_dir}/")
+    print(f"Loaded {num_labels} legal domain classes from: dataset/processed/label_mapping.json")
 
-    # 2. Load HuggingFace Dataset
+    # 1. Load HuggingFace Dataset
     dataset = load_dataset(
         "csv",
         data_files={
@@ -78,8 +80,8 @@ def train_model():
         }
     )
 
-    # 3. Initialize Tokenizer & Tokenize Dataset
-    print(f"Initializing Tokenizer: {MODEL_NAME}")
+    # 2. Initialize Tokenizer & Tokenize Dataset
+    print(f"Initializing InLegalBERT Tokenizer: {MODEL_NAME}")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
     def tokenize_function(examples):
@@ -92,8 +94,8 @@ def train_model():
 
     tokenized_dataset = dataset.map(tokenize_function, batched=True)
 
-    # 4. Load Pretrained Sequence Classification Model
-    print(f"Loading Base Model: {MODEL_NAME}")
+    # 3. Load Pretrained Sequence Classification Model
+    print(f"Loading Base Model Weights: {MODEL_NAME}")
     model = AutoModelForSequenceClassification.from_pretrained(
         MODEL_NAME,
         num_labels=num_labels,
@@ -101,9 +103,10 @@ def train_model():
         id2label=id2label
     )
 
-    # 5. Define Training Arguments
+    # 4. Define Training Arguments
+    checkpoint_dir = os.path.join(PROJECT_ROOT, "models", "checkpoint_runs")
     training_args = TrainingArguments(
-        output_dir="./models/checkpoint_runs",
+        output_dir=checkpoint_dir,
         num_train_epochs=3,
         per_device_train_batch_size=8,
         per_device_eval_batch_size=8,
@@ -118,7 +121,7 @@ def train_model():
         report_to="none"
     )
 
-    # 6. Initialize Trainer
+    # 5. Initialize Trainer
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -128,17 +131,17 @@ def train_model():
         compute_metrics=compute_metrics
     )
 
-    # 7. Train Model
+    # 6. Train Model
     print("\nStarting InLegalBERT Fine-Tuning Process...")
     trainer.train()
 
-    # 8. Save Model & Tokenizer
+    # 7. Save Model & Tokenizer
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     trainer.save_model(OUTPUT_DIR)
     tokenizer.save_pretrained(OUTPUT_DIR)
 
-    print("-" * 70)
-    print(f"Training Complete! Model & Tokenizer saved to: {OUTPUT_DIR}\n")
+    print("-" * 75)
+    print(f"Training Complete! Model & Tokenizer saved to: models/judicia-domain-model/\n")
 
 if __name__ == "__main__":
     train_model()
