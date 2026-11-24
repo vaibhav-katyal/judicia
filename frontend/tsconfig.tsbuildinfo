@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/lib/judicia-data.ts"],"version":"6.0.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/composer.tsx","./src/components/icons.tsx","./src/components/resultsview.tsx","./src/lib/judicia-data.ts"],"version":"6.0.3"}
