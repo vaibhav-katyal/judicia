@@ -1,4 +1,4 @@
-# ⚖️ Judicia — Legal First Aid with RAG
+﻿# âš–ï¸ Judicia â€” Legal First Aid with RAG
 
 Judicia is an India-focused legal first-aid assistant. A user describes what happened,
 and Judicia:
@@ -24,7 +24,7 @@ engine handled retrieval and drafting.
 
 | Service | What to bring | Where to get it |
 | --- | --- | --- |
-| **Pinecone** | API key. The index is created automatically. | https://app.pinecone.io → API Keys |
+| **Pinecone** | API key. The index is created automatically. | https://app.pinecone.io â†’ API Keys |
 | **Groq** | API key | https://console.groq.com/keys |
 
 Pinecone's free tier and Groq's free tier are enough for development and a demo.
@@ -38,7 +38,7 @@ Pinecone's free tier and Groq's free tier are enough for development and a demo.
   - `config.json`
   - `tokenizer.json`
   - `tokenizer_config.json`
-  - `model.safetensors` (~418 MB — this file is git-ignored, so keep a local copy)
+  - `model.safetensors` (~418 MB â€” this file is git-ignored, so keep a local copy)
 
 The classifier is loaded **inside the backend**. You do not start it as a separate
 service or script.
@@ -68,7 +68,7 @@ PINECONE_INDEX_NAME=judicia-legal
 PINECONE_NAMESPACE=legal-corpus
 PINECONE_EMBEDDING_MODEL=multilingual-e5-large
 PINECONE_EMBEDDING_DIMENSION=1024
-GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_MODEL=openai/gpt-oss-120b
 RAG_TOP_K=6
 ```
 
@@ -76,7 +76,7 @@ RAG_TOP_K=6
 
 > The app still starts without keys: retrieval falls back to a local index and
 > drafting falls back to a rule-based playbook. The header will say
-> **“Local fallback mode”** instead of **“AI engine ready.”**
+> **â€œLocal fallback modeâ€** instead of **â€œAI engine ready.â€**
 
 ---
 
@@ -180,15 +180,15 @@ If you deploy the frontend elsewhere, set `VITE_API_BASE_URL` to the backend URL
 
 ## 7. Verify the full RAG path
 
-1. The header should show **“AI engine ready”** with three green dots.
+1. The header should show **â€œAI engine readyâ€** with three green dots.
    - Classifier = local InLegalBERT model
    - Pinecone = key configured
    - Groq = key configured
-2. Ask: *“My landlord refuses to return my rental security deposit.”*
+2. Ask: *â€œMy landlord refuses to return my rental security deposit.â€*
 3. You should see:
-   - **Retrieved: 5 sources · Pinecone**
-   - **Drafted: llama-3.3-70b-versatile**
-   - Source cards with citations and “The sources behind this answer.”
+   - **Retrieved: 5 sources Â· Pinecone**
+   - **Drafted: openai/gpt-oss-120b**
+   - Source cards with citations and â€œThe sources behind this answer.â€
 4. Click a source card to see its snippet, section labels, and match explanation.
 
 If any service is down, the answer still appears but the header and answer metadata
@@ -245,7 +245,7 @@ Response shape (abridged):
   "meta": {
     "classifier": { "model": "judicia-domain-model", "latency_ms": 120 },
     "retrieval": { "engine": "pinecone", "index": "judicia-legal", "latency_ms": 400 },
-    "llm": { "used": true, "model": "llama-3.3-70b-versatile", "latency_ms": 1800 },
+    "llm": { "used": true, "model": "openai/gpt-oss-120b", "latency_ms": 1800 },
     "corpus_items": 25,
     "latency_ms": 2400
   },
@@ -260,7 +260,7 @@ Backwards-compatible alias for `/api/ask` (older frontend builds).
 ### `GET /api/health`
 
 Returns classifier status, Pinecone/Groq configuration status, last retrieval engine,
-and corpus size. Safe to expose — it never returns keys.
+and corpus size. Safe to expose â€” it never returns keys.
 
 ---
 
@@ -299,37 +299,37 @@ was used, and the answer's `meta` object explains any fallback reason.
 
 ```text
 test-model/
-├── backend/
-│   ├── app.py                  # Flask API: classifier + RAG endpoint
-│   ├── rag_engine.py           # Pinecone retrieval, Groq generation, fallbacks
-│   ├── legal_knowledge.py      # corpus loading, chunks, playbooks, fallback answers
-│   ├── ingest_pinecone.py      # one-time Pinecone index creation + ingestion
-│   ├── legal_corpus.json       # 25 statutory provisions / precedents
-│   ├── inference.py            # standalone classifier CLI
-│   ├── stress_test.py          # classifier evaluation
-│   ├── requirements.txt
-│   └── .env.example            # copy to .env; never commit .env
-│
-├── frontend/
-│   ├── src/
-│   │   ├── App.tsx             # landing page, loading/error states, header status
-│   │   ├── components/
-│   │   │   ├── Composer.tsx    # question box
-│   │   │   ├── ResultsView.tsx # plan, sources, probability panel, copy/print
-│   │   │   └── Icons.tsx
-│   │   ├── lib/judicia-data.ts # typed API client + response normalisation
-│   │   └── index.css           # design system
-│   └── vite.config.ts          # /api proxy -> localhost:8000
-│
-├── models/judicia-domain-model/
-│   ├── config.json
-│   ├── tokenizer.json
-│   ├── tokenizer_config.json
-│   └── model.safetensors       # ~418 MB, keep locally (git-ignored)
-│
-├── dataset/                    # training data
-├── src/                        # ML training pipeline
-└── notebooks/                  # EDA and evaluation notebooks
+â”œâ”€â”€ backend/
+â”‚   â”œâ”€â”€ app.py                  # Flask API: classifier + RAG endpoint
+â”‚   â”œâ”€â”€ rag_engine.py           # Pinecone retrieval, Groq generation, fallbacks
+â”‚   â”œâ”€â”€ legal_knowledge.py      # corpus loading, chunks, playbooks, fallback answers
+â”‚   â”œâ”€â”€ ingest_pinecone.py      # one-time Pinecone index creation + ingestion
+â”‚   â”œâ”€â”€ legal_corpus.json       # 25 statutory provisions / precedents
+â”‚   â”œâ”€â”€ inference.py            # standalone classifier CLI
+â”‚   â”œâ”€â”€ stress_test.py          # classifier evaluation
+â”‚   â”œâ”€â”€ requirements.txt
+â”‚   â””â”€â”€ .env.example            # copy to .env; never commit .env
+â”‚
+â”œâ”€â”€ frontend/
+â”‚   â”œâ”€â”€ src/
+â”‚   â”‚   â”œâ”€â”€ App.tsx             # landing page, loading/error states, header status
+â”‚   â”‚   â”œâ”€â”€ components/
+â”‚   â”‚   â”‚   â”œâ”€â”€ Composer.tsx    # question box
+â”‚   â”‚   â”‚   â”œâ”€â”€ ResultsView.tsx # plan, sources, probability panel, copy/print
+â”‚   â”‚   â”‚   â””â”€â”€ Icons.tsx
+â”‚   â”‚   â”œâ”€â”€ lib/judicia-data.ts # typed API client + response normalisation
+â”‚   â”‚   â””â”€â”€ index.css           # design system
+â”‚   â””â”€â”€ vite.config.ts          # /api proxy -> localhost:8000
+â”‚
+â”œâ”€â”€ models/judicia-domain-model/
+â”‚   â”œâ”€â”€ config.json
+â”‚   â”œâ”€â”€ tokenizer.json
+â”‚   â”œâ”€â”€ tokenizer_config.json
+â”‚   â””â”€â”€ model.safetensors       # ~418 MB, keep locally (git-ignored)
+â”‚
+â”œâ”€â”€ dataset/                    # training data
+â”œâ”€â”€ src/                        # ML training pipeline
+â””â”€â”€ notebooks/                  # EDA and evaluation notebooks
 ```
 
 ---

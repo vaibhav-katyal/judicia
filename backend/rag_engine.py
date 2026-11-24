@@ -88,7 +88,7 @@ class RAGConfig:
             model.strip()
             for model in _env(
                 "GROQ_FALLBACK_MODELS",
-                "llama-3.1-8b-instant,openai/gpt-oss-120b,qwen/qwen3-32b",
+                "openai/gpt-oss-20b,qwen/qwen3.8-27b",
             ).split(",")
             if model.strip()
         )
@@ -101,7 +101,7 @@ class RAGConfig:
             embedding_model=_env("PINECONE_EMBEDDING_MODEL", "multilingual-e5-large"),
             embedding_dimension=_env_int("PINECONE_EMBEDDING_DIMENSION", 1024),
             groq_api_key=_env("GROQ_API_KEY"),
-            groq_model=_env("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            groq_model=_env("GROQ_MODEL", "openai/gpt-oss-120b"),
             groq_fallback_models=fallback_models,
             top_k=max(3, min(10, _env_int("RAG_TOP_K", 6))),
             groq_timeout=float(_env_int("GROQ_TIMEOUT_SECONDS", 45)),
