@@ -32,6 +32,7 @@ from legal_knowledge import (
     get_playbook,
     load_corpus,
 )
+from pdf_ingest import load_cached_pdf_chunks
 
 # ---------------------------------------------------------------------------
 # Environment
@@ -244,7 +245,16 @@ class LegalRAG:
     def __init__(self, config: RAGConfig | None = None, corpus_path: str | Path | None = None):
         self.config = config or RAGConfig.from_env()
         self.corpus = load_corpus(corpus_path or BASE_DIR / "legal_corpus.json")
-        self.chunks = build_chunks(self.corpus)
+        self.corpus_chunks = build_chunks(self.corpus)
+
+        # PDF chunks are produced by ``pdf_ingest`` and cached locally. Loading
+        # them here means the local fallback can search Bare Acts and handbooks
+        # even when Pinecone is unreachable.
+        self.pdf_cache_path = Path(
+            _env("PDF_CHUNKS_PATH", str(BASE_DIR / "docs" / "pdf_chunks.json"))
+        )
+        self.pdf_chunks = load_cached_pdf_chunks(self.pdf_cache_path)
+        self.chunks = [*self.corpus_chunks, *self.pdf_chunks]
 
         self._tfidf: TfidfVectorizer | None = None
         self._tfidf_matrix: Any = None
@@ -269,7 +279,7 @@ class LegalRAG:
             stop_words="english",
             ngram_range=(1, 2),
             sublinear_tf=True,
-            max_features=20000,
+            max_features=60000,
         )
         self._tfidf_matrix = self._tfidf.fit_transform(texts)
         self._token_sets = [self._tokens(chunk["text"]) for chunk in self.chunks]
@@ -383,6 +393,17 @@ class LegalRAG:
             )
         return rows
 
+    @staticmethod
+    def _doc_type(metadata: dict[str, Any]) -> str:
+        doc_type = _text(metadata.get("doc_type")).lower()
+        if doc_type in {"bare_act", "handbook"}:
+            return doc_type
+        if _text(metadata.get("category")).lower() == "handbook":
+            return "handbook"
+        if _text(metadata.get("category")).lower() == "bare act":
+            return "bare_act"
+        return "corpus"
+
     def _source_from_metadata(
         self, chunk_id: str, score: float, metadata: dict[str, Any], engine: str, domain: str
     ) -> dict[str, Any]:
@@ -390,6 +411,11 @@ class LegalRAG:
         source_domain = _text(metadata.get("domain"), "General")
         citation = _text(metadata.get("citation"))
         title = _text(metadata.get("title"))
+        doc_type = self._doc_type(metadata)
+        short_code = _text(metadata.get("short_code"))
+        section = _text(metadata.get("section"))
+        source_name = _text(metadata.get("source_name")) or title
+
         if engine == "pinecone":
             why = (
                 f"Semantic match in the {source_domain} domain "
@@ -400,6 +426,11 @@ class LegalRAG:
                 f"Local keyword index matched this provision to your question "
                 f"({source_domain} domain)."
             )
+        if doc_type == "bare_act":
+            label = f"{short_code}, s.{section}" if short_code and section else "Bare Act"
+            why = f"Statutory text from {label}. " + why
+        elif doc_type == "handbook":
+            why = f"Step-by-step guidance from {source_name}. " + why
         if source_domain.lower() == domain.lower():
             why += " The predicted category also aligns with this source."
 
@@ -408,16 +439,22 @@ class LegalRAG:
         except (TypeError, ValueError):
             year = 0
 
+        text = _text(metadata.get("text"))
         return {
             "id": _text(metadata.get("source_id")) or chunk_id.split("::")[0],
             "chunk_id": chunk_id,
+            "doc_type": doc_type,
             "domain": source_domain,
             "category": _text(metadata.get("category"), "Statute"),
             "jurisdiction": _text(metadata.get("jurisdiction"), "India"),
             "year": year,
             "title": title,
             "citation": citation,
+            "short_code": short_code,
+            "section": section,
+            "source_name": source_name,
             "snippet": _text(metadata.get("snippet")),
+            "text": text,
             "passages": passages,
             "score": round(score, 4),
             "why": why,
@@ -426,9 +463,11 @@ class LegalRAG:
     def _finalise_sources(
         self, sources: Iterable[dict[str, Any]], engine: str
     ) -> list[dict[str, Any]]:
+        # Deduplicate on the chunk id, not the source id: one Act contributes
+        # many sections and each section is a distinct citation.
         deduped: dict[str, dict[str, Any]] = {}
         for source in sources:
-            key = source.get("id") or source.get("chunk_id")
+            key = source.get("chunk_id") or source.get("id")
             if not key:
                 continue
             previous = deduped.get(key)
@@ -446,6 +485,44 @@ class LegalRAG:
                 match = 0.5 + 0.48 * _clamp(score * 2.5, 0.0, 1.0)
             source["match"] = round(_clamp(match, 0.5, 0.99), 3)
         return ordered
+
+    def _mix_sources(
+        self, sources: list[dict[str, Any]], top_k: int
+    ) -> list[dict[str, Any]]:
+        """Keep the best corpus, Bare Act and handbook chunk in a result set.
+
+        A pure similarity ranking often returns six sections of one Act. Mixing
+        guarantees the answer generator sees both statutory text and practical
+        handbook steps when both are relevant.
+        """
+        if len(sources) <= top_k:
+            return sources
+
+        selected: list[dict[str, Any]] = []
+        selected_ids: set[str] = set()
+
+        for doc_type in ("bare_act", "handbook", "corpus"):
+            for source in sources:
+                if source.get("doc_type") != doc_type:
+                    continue
+                key = source.get("chunk_id") or source.get("id") or ""
+                if key in selected_ids:
+                    continue
+                selected.append(source)
+                selected_ids.add(key)
+                break
+
+        for source in sources:
+            if len(selected) >= top_k:
+                break
+            key = source.get("chunk_id") or source.get("id") or ""
+            if key in selected_ids:
+                continue
+            selected.append(source)
+            selected_ids.add(key)
+
+        selected.sort(key=lambda item: item.get("score", 0.0), reverse=True)
+        return selected[:top_k]
 
     def _local_search(self, query: str, domain: str, top_k: int) -> list[dict[str, Any]]:
         if self._tfidf is None or self._tfidf_matrix is None or not self.chunks:
@@ -494,7 +571,7 @@ class LegalRAG:
             ]
             rows = fallback_rows[:top_k]
 
-        return self._finalise_sources(rows, "local")[:top_k]
+        return self._mix_sources(self._finalise_sources(rows, "local"), top_k)
 
     def search(
         self, query: str, domain: str, confidence: float
@@ -507,17 +584,35 @@ class LegalRAG:
             try:
                 vector = self._embed([query], "query")[0]
                 rows: list[dict[str, Any]] = []
+                per_query = max(top_k * 2, 10)
 
-                # The classifier is a useful signal, not a hard gate. Query the
-                # predicted domain first, then merge in an unfiltered search so
-                # a misclassification cannot hide the right statute.
+                # Query several slices of the same index and merge them:
+                #   1. the classifier's domain (when reasonably confident),
+                #   2. an unfiltered pass so a misclassification cannot hide
+                #      the right provision (this is also what retrieves the
+                #      original JSON corpus, whose vectors predate doc_type),
+                #   3. one pass per PDF track so statutory sections and
+                #      handbook steps are both represented.
+                queries: list[dict[str, Any] | None] = []
                 if confidence >= 0.40:
+                    queries.append({"domain": {"$eq": domain}})
+                queries.append(None)
+                queries.append({"doc_type": {"$eq": "bare_act"}})
+                queries.append({"doc_type": {"$eq": "handbook"}})
+
+                for metadata_filter in queries:
                     rows += self._query_pinecone(
-                        vector, top_k=max(top_k * 2, 10), metadata_filter={"domain": {"$eq": domain}}
+                        vector, top_k=per_query, metadata_filter=metadata_filter
                     )
-                rows += self._query_pinecone(
-                    vector, top_k=max(top_k * 2, 10), metadata_filter=None
-                )
+
+                seen_chunks: set[str] = set()
+                unique_rows: list[dict[str, Any]] = []
+                for row in rows:
+                    chunk_id = row.get("chunk_id") or ""
+                    if chunk_id in seen_chunks:
+                        continue
+                    seen_chunks.add(chunk_id)
+                    unique_rows.append(row)
 
                 sources = [
                     self._source_from_metadata(
@@ -527,13 +622,15 @@ class LegalRAG:
                         engine="pinecone",
                         domain=domain,
                     )
-                    for row in rows
+                    for row in unique_rows
                 ]
                 for source in sources:
-                    if source["domain"].lower() == domain.lower():
+                    if source["doc_type"] != "handbook" and source["domain"].lower() == domain.lower():
                         source["score"] = round(source["score"] * 1.03 + 0.01, 4)
 
-                sources = self._finalise_sources(sources, "pinecone")[:top_k]
+                sources = self._mix_sources(
+                    self._finalise_sources(sources, "pinecone"), top_k
+                )
                 if sources:
                     self._pinecone_ready = True
                     self._pinecone_error = None
@@ -543,10 +640,20 @@ class LegalRAG:
                         "index": self.config.pinecone_index,
                         "namespace": self.config.pinecone_namespace,
                         "embedding_model": self.config.embedding_model,
-                        "candidates": len(rows),
+                        "candidates": len(unique_rows),
+                        "bare_act": sum(
+                            1 for source in sources if source.get("doc_type") == "bare_act"
+                        ),
+                        "handbook": sum(
+                            1 for source in sources if source.get("doc_type") == "handbook"
+                        ),
+                        "corpus": sum(
+                            1 for source in sources if source.get("doc_type") == "corpus"
+                        ),
                         "latency_ms": round((time.perf_counter() - started) * 1000, 1),
                     }
                 raise RuntimeError("Pinecone returned no matches.")
+
             except Exception as exc:
                 self._pinecone_ready = False
                 self._pinecone_error = _friendly_error(exc)
@@ -569,15 +676,54 @@ class LegalRAG:
     def _context_for_llm(self, sources: list[dict[str, Any]]) -> str:
         blocks: list[str] = []
         for index, source in enumerate(sources, start=1):
-            passages = "; ".join(source.get("passages") or []) or "Not available"
-            blocks.append(
-                f"[S{index}] {source.get('citation') or source.get('title')}"
-                f" ({source.get('category')}, {source.get('year')})\n"
-                f"Title: {source.get('title')}\n"
-                f"Summary: {_shorten(str(source.get('snippet', '')), 650)}\n"
-                f"Key provisions: {_shorten(passages, 650)}"
-            )
-        return "\n\n".join(blocks) or "No statutes were retrieved."
+            doc_type = source.get("doc_type") or "corpus"
+            short_code = source.get("short_code") or ""
+            section = source.get("section") or ""
+            source_name = source.get("source_name") or source.get("title") or ""
+            citations: list[str] = []
+
+            if doc_type == "bare_act":
+                header = f"[S{index}] BARE ACT"
+                if short_code:
+                    header += f" — {short_code}"
+                if section:
+                    header += f", Section {section}"
+                citations.append(
+                    f"{short_code}, s.{section}" if short_code and section else (short_code or "Bare Act")
+                )
+                body = (
+                    f"Statute: {source_name}\n"
+                    f"Section title: {source.get('title')}\n"
+                    f"Section text:\n{_shorten(str(source.get('text') or source.get('snippet') or ''), 1800)}"
+                )
+            elif doc_type == "handbook":
+                header = f"[S{index}] HANDBOOK — {source_name}"
+                citations.append(f"[Guide: {source_name}]")
+                body = (
+                    f"Guide: {source_name}\n"
+                    f"Excerpt (procedural steps / FAQ):\n"
+                    f"{_shorten(str(source.get('text') or source.get('snippet') or ''), 1800)}"
+                )
+            else:
+                header = (
+                    f"[S{index}] {source.get('citation') or source.get('title')}"
+                    f" ({source.get('category')}, {source.get('year')})"
+                )
+                citations.append(str(source.get("citation") or source.get("title") or "Corpus entry"))
+                passages = "; ".join(source.get("passages") or []) or "Not available"
+                body = (
+                    f"Title: {source.get('title')}\n"
+                    f"Summary: {_shorten(str(source.get('snippet', '')), 650)}\n"
+                    f"Key provisions: {_shorten(passages, 650)}"
+                )
+
+            block = f"{header}\nCite as: {'; '.join(c for c in citations if c)}\n{body}"
+            if doc_type == "corpus":
+                block = f"{header}\n{body}"
+            blocks.append(block)
+        if not blocks:
+            return "No statutes or guides were retrieved."
+        return "Ground every legal claim in these excerpts:\n\n" + "\n\n".join(blocks)
 
     def _system_prompt(self) -> str:
         return (
@@ -587,6 +733,20 @@ class LegalRAG:
             "GROUNDING RULES:\n"
             "- Use ONLY the retrieved context for legal provisions. Cite section numbers and "
             "statute names exactly as they appear in the context.\n"
+            "- Context entries marked BARE ACT are statutory text. Cite them exactly as given, "
+            "for example 'BNS, s.35' or 'BNSS, s.41'. Never cite a section that is not in the context.\n"
+            "- Context entries marked HANDBOOK are practical guides. Use them for procedure and "
+            "steps, and credit them as '[Guide: <name>]'. Handbooks are not statutes and have no "
+            "section numbers: never write 'Section X of the guide'.\n"
+            "- Only cite a section number that appears in a BARE ACT entry with that exact number. "
+            "If a section is mentioned only inside a handbook excerpt, do not present it as a "
+            "statutory citation unless the same section is also in a BARE ACT entry.\n"
+            "- You may combine a Bare Act right with a handbook step, but keep each citation on "
+            "the rule or step it actually supports.\n"
+            "- End every right, deadline and procedural step that comes from the context with its "
+            "matching citation: 'SHORT_CODE, s.N' for a Bare Act or '[Guide: <name>]' for a handbook.\n"
+            "- Do not include a right, deadline or step that you cannot tie to a context entry. "
+            "If a useful generic point has no matching excerpt, leave it out.\n"
             "- Never invent a section number, case name, deadline, fee, phone number, or authority.\n"
             "- If the context does not cover an important point, say so plainly and recommend a "
             "qualified advocate.\n"
@@ -617,16 +777,25 @@ class LegalRAG:
             + (f" (phone {entry.get('phone')})" if entry.get("phone") else "")
             for entry in playbook.get("where_to_complain", [])
         )
+        tracks = {
+            "bare_act": sum(1 for item in sources if item.get("doc_type") == "bare_act"),
+            "handbook": sum(1 for item in sources if item.get("doc_type") == "handbook"),
+            "corpus": sum(1 for item in sources if item.get("doc_type") == "corpus"),
+        }
         return (
             f"SITUATION:\n{query}\n\n"
             f"CLASSIFIER:\nPredicted domain: {domain}\n"
             f"Model confidence: {confidence * 100:.1f}%\n\n"
-            f"RETRIEVED CONTEXT:\n{self._context_for_llm(sources)}\n\n"
+            f"RETRIEVED CONTEXT ({tracks['bare_act']} Bare Act sections, "
+            f"{tracks['handbook']} handbook excerpts, "
+            f"{tracks['corpus']} corpus entries):\n{self._context_for_llm(sources)}\n\n"
             f"VERIFIED HELPLINES/AUTHORITIES (you may reuse the relevant ones):\n{verified}\n\n"
             "Write the first-aid plan for the person in the SITUATION. Be specific to their "
-            "facts, but ground every legal point in the CONTEXT. Put the most urgent action "
-            "first. Explain what evidence to preserve. Tell them where to go and what to say."
+            "facts, but ground every legal point in the CONTEXT. Use Bare Act sections for "
+            "rights and duties and handbook excerpts for procedural steps. Put the most urgent "
+            "action first. Explain what evidence to preserve. Tell them where to go and what to say."
         )
+
 
     def _call_groq(self, messages: list[dict[str, str]]) -> tuple[str, str]:
         client = self._groq_client()
@@ -870,6 +1039,10 @@ class LegalRAG:
 
     # -- status ----------------------------------------------------------
     def status(self) -> dict[str, Any]:
+        bare_act_chunks = sum(1 for chunk in self.pdf_chunks if chunk.get("doc_type") == "bare_act")
+        handbook_chunks = sum(
+            1 for chunk in self.pdf_chunks if chunk.get("doc_type") == "handbook"
+        )
         return {
             "pinecone": {
                 "configured": bool(self.config.pinecone_api_key),
@@ -890,6 +1063,14 @@ class LegalRAG:
                 or ("pinecone" if self.config.pinecone_api_key else "local")
             },
             "corpus_items": len(self.corpus),
+            "documents": {
+                "corpus_chunks": len(self.corpus_chunks),
+                "pdf_chunks": len(self.pdf_chunks),
+                "bare_act_chunks": bare_act_chunks,
+                "handbook_chunks": handbook_chunks,
+                "pdf_cache": str(self.pdf_cache_path),
+                "pdf_cache_present": self.pdf_cache_path.exists(),
+            },
         }
 
 
@@ -965,21 +1146,61 @@ def ensure_pinecone_index(
     return pc.Index(host=host)
 
 
-def ingest_corpus(
+_METADATA_FIELDS = (
+    "source_id",
+    "doc_type",
+    "domain",
+    "category",
+    "jurisdiction",
+    "year",
+    "title",
+    "citation",
+    "short_code",
+    "section",
+    "source_name",
+    "act_name",
+    "snippet",
+    "passages",
+    "keywords",
+    "part",
+)
+
+
+def chunk_metadata(chunk: dict[str, Any]) -> dict[str, Any]:
+    """Build a Pinecone-safe metadata dict for any corpus or PDF chunk."""
+    metadata: dict[str, Any] = {}
+    for key in _METADATA_FIELDS:
+        value = chunk.get(key)
+        if value is None:
+            continue
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                continue
+        if isinstance(value, list) and not value:
+            continue
+        metadata[key] = value
+    metadata.setdefault("doc_type", "corpus")
+    metadata["text"] = str(chunk.get("text", ""))
+    return metadata
+
+
+def upsert_chunks(
     pc: Any,
     config: RAGConfig,
+    chunks: list[dict[str, Any]],
     *,
-    recreate: bool = False,
+    index: Any = None,
     batch_size: int = 32,
+    label: str = "vectors",
 ) -> int:
-    """Embed and upsert every corpus chunk. Returns the number of vectors written."""
-    corpus = load_corpus()
-    chunks = build_chunks(corpus)
+    """Embed and upsert chunks into the configured index and namespace."""
     if not chunks:
-        raise RuntimeError("The legal corpus is empty or could not be loaded.")
+        return 0
+    if index is None:
+        index = ensure_pinecone_index(pc, config)
 
-    index = ensure_pinecone_index(pc, config, recreate=recreate)
-
+    batch_size = max(1, int(batch_size))
     vectors_written = 0
     for start in range(0, len(chunks), batch_size):
         batch = chunks[start : start + batch_size]
@@ -1009,33 +1230,34 @@ def ingest_corpus(
             values = _field(embedding, "values")
             if values is None:
                 continue
-            metadata = {
-                key: chunk[key]
-                for key in (
-                    "source_id",
-                    "domain",
-                    "category",
-                    "jurisdiction",
-                    "year",
-                    "title",
-                    "citation",
-                    "snippet",
-                    "passages",
-                    "keywords",
-                )
-            }
-            metadata["text"] = chunk["text"]
             vectors.append(
                 {
                     "id": chunk["id"],
                     "values": [float(value) for value in values],
-                    "metadata": metadata,
+                    "metadata": chunk_metadata(chunk),
                 }
             )
 
         if vectors:
             index.upsert(vectors=vectors, namespace=config.pinecone_namespace)
             vectors_written += len(vectors)
-            print(f"  upserted {vectors_written}/{len(chunks)} vectors")
-
+            print(f"  upserted {vectors_written}/{len(chunks)} {label}")
     return vectors_written
+
+
+def ingest_corpus(
+    pc: Any,
+    config: RAGConfig,
+    *,
+    recreate: bool = False,
+    batch_size: int = 32,
+) -> int:
+    """Embed and upsert every corpus chunk. Returns the number of vectors written."""
+    corpus = load_corpus()
+    chunks = build_chunks(corpus)
+    if not chunks:
+        raise RuntimeError("The legal corpus is empty or could not be loaded.")
+
+    index = ensure_pinecone_index(pc, config, recreate=recreate)
+    return upsert_chunks(pc, config, chunks, index=index, batch_size=batch_size)
+

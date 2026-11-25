@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "description": "Maps PDFs dropped in backend/docs/ to Judicia's two ingestion tracks. Filenames are matched after normalisation (case, spaces, commas, underscores and hyphens are ignored). 'patterns' are optional regex fallbacks. Add new PDFs here, or simply put them in backend/docs/bare_act/ or backend/docs/handbook/.",
+  "documents": [
+    {
+      "filename": "Bharatiya_Nagarik_Suraksha_Sanhita_2023.pdf",
+      "patterns": ["bharatiya.*nagarik.*suraksha.*2023", "bnss"],
+      "doc_type": "bare_act",
+      "act_name": "Bharatiya Nagarik Suraksha Sanhita, 2023",
+      "short_code": "BNSS",
+      "domain": "Criminal",
+      "year": 2023
+    },
+    {
+      "filename": "BNS2023.pdf",
+      "patterns": ["^bns.*2023", "bharatiya.*nyaya.*sanhita"],
+      "doc_type": "bare_act",
+      "act_name": "Bharatiya Nyaya Sanhita, 2023",
+      "short_code": "BNS",
+      "domain": "Criminal",
+      "year": 2023
+    },
+    {
+      "filename": "CP_Act_2019.pdf",
+      "patterns": ["cp[ _-]?act[ _-]?2019", "consumer.*protection.*act.*2019"],
+      "doc_type": "bare_act",
+      "act_name": "Consumer Protection Act, 2019",
+      "short_code": "CPA 2019",
+      "domain": "Consumer",
+      "year": 2019
+    },
+    {
+      "filename": "it_act_2000_updated.pdf",
+      "patterns": ["it[ _-]?act[ _-]?2000", "information.*technology.*act.*2000"],
+      "doc_type": "bare_act",
+      "act_name": "Information Technology Act, 2000",
+      "short_code": "IT Act",
+      "domain": "Cyber",
+      "year": 2000
+    },
+    {
+      "filename": "DOMESTICVIOLENCEACT_2005.pdf",
+      "patterns": ["domestic.*violence.*act.*2005", "pwdva"],
+      "doc_type": "bare_act",
+      "act_name": "Protection of Women from Domestic Violence Act, 2005",
+      "short_code": "PWDVA",
+      "domain": "Family",
+      "year": 2005
+    },
+    {
+      "filename": "rti_act_2005.pdf",
+      "patterns": ["rti[ _-]?act[ _-]?2005", "right.*to.*information.*act.*2005"],
+      "doc_type": "bare_act",
+      "act_name": "Right to Information Act, 2005",
+      "short_code": "RTI Act",
+      "domain": "Constitutional",
+      "year": 2005
+    },
+    {
+      "filename": "Legal-Aid-to-Legal-Rights.pdf",
+      "patterns": ["legal.*aid.*to.*legal.*rights"],
+      "doc_type": "handbook",
+      "act_name": "Legal Aid to Legal Rights",
+      "short_code": "LEGAL AID",
+      "source_name": "NLSIU and Department of Justice — Legal Aid to Legal Rights Handbook",
+      "domain": "General",
+      "year": 2024
+    },
+    {
+      "filename": "NALSA_Arrest_Legal_Aid_SOP.pdf",
+      "patterns": ["nalsa.*arrest", "early.*access.*to.*justice.*arrest", "20250408448855620"],
+      "doc_type": "handbook",
+      "act_name": "Early Access to Justice at Pre-Arrest, Arrest and Remand Stage",
+      "short_code": "NALSA SOP",
+      "source_name": "NALSA — Early Access to Justice at Pre-Arrest, Arrest and Remand Stage (SOP)",
+      "domain": "General",
+      "year": 2019
+    }
+  ]
+}

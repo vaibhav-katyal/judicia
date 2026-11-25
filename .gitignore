@@ -68,6 +68,7 @@ tensorboard/
 # 6. Generated / Encoded Dataset Files
 # ==========================================
 dataset/*_encoded.csv
+backend/docs/pdf_chunks.json
 
 # ==========================================
 # 7. Environment Variables & Secret Keys

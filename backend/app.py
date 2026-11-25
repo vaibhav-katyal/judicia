@@ -114,8 +114,12 @@ print(f"[Judicia] Classifier ready ({len(classifier.labels)} labels).")
 
 print("[Judicia] Initialising retrieval + generation engine...")
 rag = LegalRAG(corpus_path=BASE_DIR / "legal_corpus.json")
+_documents = rag.status()["documents"]
 print(
-    f"[Judicia] RAG ready with {len(rag.corpus)} provisions. "
+    f"[Judicia] RAG ready with {len(rag.corpus)} provisions "
+    f"and {len(rag.pdf_chunks)} PDF chunks "
+    f"(Bare Acts={_documents['bare_act_chunks']}, "
+    f"handbooks={_documents['handbook_chunks']}). "
     f"Pinecone={'configured' if rag.config.pinecone_api_key else 'local fallback'}, "
     f"Groq={'configured' if rag.config.groq_api_key else 'rule-based fallback'}."
 )

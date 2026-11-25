@@ -17,3 +17,7 @@ flask-cors==6.0.5
 pinecone==10.3.0
 groq==1.7.0
 python-dotenv==1.2.3
+
+# PDF ingestion (Bare Acts + legal-aid handbooks)
+pymupdf==2.1
+langchain-text-splitters==1.2.0

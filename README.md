@@ -110,11 +110,19 @@ python backend\ingest_pinecone.py
 What this does:
 
 - Reads `backend/legal_corpus.json` (25 provisions).
+- Extracts and chunks every PDF in `backend/docs/`:
+  - **Bare Acts** are split per **section**, so `Provided that` clauses stay with
+    their rule, and are tagged `doc_type: "bare_act"`.
+  - **Handbooks / SOPs** are split into ~1,000-character procedural chunks and
+    tagged `doc_type: "handbook"`.
 - Creates the `judicia-legal` index if it does not exist (1024 dimensions, cosine,
   AWS `us-east-1`).
-- Embeds every provision with Pinecone hosted inference.
-- Upserts the vectors into the `legal-corpus` namespace.
-- Prints the final vector count.
+- Embeds every chunk with the same Pinecone hosted model (`multilingual-e5-large`).
+- Upserts the vectors into the `legal-corpus` namespace, keeping the existing
+  corpus vectors intact.
+- Caches the extracted PDF chunks in `backend/docs/pdf_chunks.json` so the local
+  fallback can search them when Pinecone is unreachable.
+- Prints per-track counts and the final vector count.
 
 Useful commands:
 
@@ -122,11 +130,44 @@ Useful commands:
 # See what would be embedded, without calling Pinecone
 python backend\ingest_pinecone.py --dry-run
 
-# Rebuild the index after changing the corpus or embedding model
+# Only the PDF tracks (leaves existing corpus vectors untouched)
+python backend\ingest_pinecone.py --pdf-only
+
+# Only the JSON corpus (ignores backend/docs)
+python backend\ingest_pinecone.py --corpus-only
+
+# Rebuild the index after changing the corpus, PDFs or embedding model
 python backend\ingest_pinecone.py --recreate
+
+# Custom folder / manifest / batch size
+python backend\ingest_pinecone.py --docs-dir backend\docs --batch-size 32
 ```
 
 You do **not** need to create the index manually in the Pinecone dashboard.
+
+### Where to put PDFs
+
+Drop files in `backend/docs/` and tag them in `backend/docs_manifest.json` as
+either `bare_act` or `handbook`. Unlisted PDFs in `backend/docs/bare_act/` or
+`backend/docs/handbook/` are picked up automatically.
+
+The manifest already maps the expected files:
+
+| File | Track | Short code |
+| --- | --- | --- |
+| `Bharatiya_Nagarik_Suraksha_Sanhita,_2023.pdf` | `bare_act` | `BNSS` |
+| `BNS2023.pdf` | `bare_act` | `BNS` |
+| `CP Act 2019_1732700731.pdf` | `bare_act` | `CPA 2019` |
+| `it_act_2000_updated.pdf` | `bare_act` | `IT Act` |
+| `DOMESTICVIOLENCEACT,2005.pdf` | `bare_act` | `PWDVA` |
+| `rti_act_2005.pdf` | `bare_act` | `RTI Act` |
+| `Legal-Aid-to-Legal-Rights.pdf` | `handbook` | `LEGAL AID` |
+| `20250408448855620.pdf` (NALSA SOP) | `handbook` | `NALSA SOP` |
+
+The IT Act PDF is not in the repo yet. Add it and re-run
+`python backend\ingest_pinecone.py --pdf-only`; the rest ingest normally without it.
+See `backend/docs/README.md` for the full manifest format.
+
 
 ---
 
@@ -145,7 +186,7 @@ Expected output:
 [Judicia] Model: ...\models\judicia-domain-model
 [Judicia] Classifier ready (8 labels).
 [Judicia] Initialising retrieval + generation engine...
-[Judicia] RAG ready with 25 provisions. Pinecone=configured, Groq=configured.
+[Judicia] RAG ready with 25 provisions and 1987 PDF chunks (Bare Acts=1292, handbooks=695). Pinecone=configured, Groq=configured.
 [Judicia] API listening on http://localhost:8000
 ```
 
@@ -303,7 +344,10 @@ test-model/
 â”‚   â”œâ”€â”€ app.py                  # Flask API: classifier + RAG endpoint
 â”‚   â”œâ”€â”€ rag_engine.py           # Pinecone retrieval, Groq generation, fallbacks
 â”‚   â”œâ”€â”€ legal_knowledge.py      # corpus loading, chunks, playbooks, fallback answers
-â”‚   â”œâ”€â”€ ingest_pinecone.py      # one-time Pinecone index creation + ingestion
+â”‚   â”œâ”€â”€ pdf_ingest.py           # PDF extraction + Bare Act / handbook chunking
+â”‚   â”œâ”€â”€ docs_manifest.json      # maps PDFs to doc_type, short_code, domain
+â”‚   â”œâ”€â”€ docs/                   # source PDFs + pdf_chunks.json cache + README
+â”‚   â”œâ”€â”€ ingest_pinecone.py      # Pinecone index creation + corpus/PDF ingestion
 â”‚   â”œâ”€â”€ legal_corpus.json       # 25 statutory provisions / precedents
 â”‚   â”œâ”€â”€ inference.py            # standalone classifier CLI
 â”‚   â”œâ”€â”€ stress_test.py          # classifier evaluation
